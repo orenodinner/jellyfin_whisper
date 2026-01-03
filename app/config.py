@@ -1,0 +1,38 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import List, Optional
+
+from pydantic import BaseModel, Field
+
+
+class PathMapping(BaseModel):
+    source: str
+    target: str
+    regex: bool = False
+
+
+class AppConfig(BaseModel):
+    path_mappings: List[PathMapping] = Field(default_factory=list)
+    model: str = "medium"
+    language: Optional[str] = "ja"
+    device: str = "cuda"
+    compute_type: str = "float16"
+    overwrite_existing: bool = False
+    srt_suffix: str = ".ja.srt"
+    max_concurrent_jobs: int = 1
+
+    def normalized(self) -> "AppConfig":
+        if self.max_concurrent_jobs < 1:
+            self.max_concurrent_jobs = 1
+        if not self.srt_suffix.startswith("."):
+            self.srt_suffix = "." + self.srt_suffix
+        return self
+
+
+def load_config(config_path: Path) -> AppConfig:
+    if config_path.exists():
+        data = json.loads(config_path.read_text(encoding="utf-8"))
+        return AppConfig.parse_obj(data).normalized()
+    return AppConfig().normalized()

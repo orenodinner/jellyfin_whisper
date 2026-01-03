@@ -1,0 +1,16 @@
+{
+  "path_mappings": [
+    {
+      "source": "/mnt/Drive/",
+      "target": "D:\\",
+      "regex": false
+    }
+  ],
+  "model": "medium",
+  "language": "ja",
+  "device": "cuda",
+  "compute_type": "float16",
+  "overwrite_existing": false,
+  "srt_suffix": ".ja.srt",
+  "max_concurrent_jobs": 1
+}
