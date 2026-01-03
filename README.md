@@ -1,4 +1,4 @@
-# JellyfinORED 文字起こしサーバー
+﻿# JellyfinORED 文字起こしサーバー
 
 文字起こしリクエストを受け取り、Linux パスを Windows パスへ変換し、faster-whisper で解析してメディアと同じフォルダに SRT を保存する FastAPI サーバーです。
 
@@ -12,8 +12,16 @@ pip install -r requirements.txt
 
 ## 起動
 
+設定ファイルの `host` と `port` を使って起動します。
+
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 9876
+python run_server.py
+```
+
+直接指定して起動したい場合:
+
+```bash
+uvicorn app.main:app --host 192.168.0.11 --port 9876
 ```
 
 ## 設定
@@ -28,6 +36,8 @@ uvicorn app.main:app --host 0.0.0.0 --port 9876
 - `overwrite_existing`: `false` の場合、既存 SRT があればスキップ。
 - `srt_suffix`: ファイル名の末尾（例: `.ja.srt`）。
 - `max_concurrent_jobs`: 同時実行数の上限。
+- `host`: サーバーの待ち受け IP（例: `192.168.0.11`）。
+- `port`: サーバーの待ち受けポート（例: `9876`）。
 
 設定ファイルの場所は環境変数で上書きできます:
 

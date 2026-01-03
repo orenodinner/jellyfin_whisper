@@ -22,12 +22,16 @@ class AppConfig(BaseModel):
     overwrite_existing: bool = False
     srt_suffix: str = ".ja.srt"
     max_concurrent_jobs: int = 1
+    host: str = "0.0.0.0"
+    port: int = 9876
 
     def normalized(self) -> "AppConfig":
         if self.max_concurrent_jobs < 1:
             self.max_concurrent_jobs = 1
         if not self.srt_suffix.startswith("."):
             self.srt_suffix = "." + self.srt_suffix
+        if not (1 <= self.port <= 65535):
+            self.port = 9876
         return self
 
 

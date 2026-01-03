@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+import sys
 import threading
 from pathlib import Path
 from typing import Optional
@@ -14,9 +15,25 @@ from faster_whisper import WhisperModel
 
 from .config import AppConfig, PathMapping, load_config
 
+# --- NVIDIA DLL パスの追加 (ここから追加) ---
+if os.name == "nt":  # Windowsの場合
+    import site
+
+    # 仮想環境内またはシステムのsite-packagesからnvidia関連のbinディレクトリを探す
+    site_packages = site.getsitepackages()
+    for sp in site_packages:
+        nvidia_path = Path(sp) / "nvidia"
+        if nvidia_path.exists():
+            # cublasやcudnnのbinフォルダを探してDLLディレクトリとして追加
+            for bin_path in nvidia_path.glob("**/bin"):
+                os.add_dll_directory(str(bin_path))
+# --- NVIDIA DLL パスの追加 (ここまで) ---
+
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
-CONFIG_PATH = Path(os.getenv("JELLYFINORED_CONFIG", ROOT_DIR / "config.json")).expanduser()
+CONFIG_PATH = Path(
+    os.getenv("JELLYFINORED_CONFIG", ROOT_DIR / "config.json")
+).expanduser()
 CONFIG: AppConfig = load_config(CONFIG_PATH)
 
 logger = logging.getLogger("jellyfinored")
@@ -48,8 +65,15 @@ def get_model() -> WhisperModel:
     if _MODEL is None:
         with _MODEL_LOCK:
             if _MODEL is None:
-                logger.info("Loading model '%s' (device=%s, compute_type=%s)", CONFIG.model, CONFIG.device, CONFIG.compute_type)
-                _MODEL = WhisperModel(CONFIG.model, device=CONFIG.device, compute_type=CONFIG.compute_type)
+                logger.info(
+                    "Loading model '%s' (device=%s, compute_type=%s)",
+                    CONFIG.model,
+                    CONFIG.device,
+                    CONFIG.compute_type,
+                )
+                _MODEL = WhisperModel(
+                    CONFIG.model, device=CONFIG.device, compute_type=CONFIG.compute_type
+                )
     return _MODEL
 
 
@@ -94,18 +118,26 @@ def transcribe_task(request: TranscriptionRequest, mapped_path: str) -> None:
         srt_path = get_srt_path(media_path)
 
         if srt_path.exists() and not CONFIG.overwrite_existing:
-            logger.info("Skipping existing SRT for itemId=%s: %s", request.itemId, srt_path)
+            logger.info(
+                "Skipping existing SRT for itemId=%s: %s", request.itemId, srt_path
+            )
             return
 
         if not media_path.exists():
-            logger.error("Media file not found for itemId=%s: %s", request.itemId, media_path)
+            logger.error(
+                "Media file not found for itemId=%s: %s", request.itemId, media_path
+            )
             return
 
         try:
             model = get_model()
             logger.info("Transcribing itemId=%s path=%s", request.itemId, media_path)
             segments, info = model.transcribe(str(media_path), language=CONFIG.language)
-            logger.info("Detected language=%s (prob=%.2f)", info.language, info.language_probability)
+            logger.info(
+                "Detected language=%s (prob=%.2f)",
+                info.language,
+                info.language_probability,
+            )
             write_srt(segments, srt_path)
             logger.info("SRT written for itemId=%s: %s", request.itemId, srt_path)
         except Exception:
@@ -118,12 +150,16 @@ async def health() -> dict:
 
 
 @app.post("/transcribe", response_model=TranscriptionResponse)
-async def transcribe(request: TranscriptionRequest, background_tasks: BackgroundTasks) -> TranscriptionResponse:
+async def transcribe(
+    request: TranscriptionRequest, background_tasks: BackgroundTasks
+) -> TranscriptionResponse:
     mapped_path = map_path(request.filePath, CONFIG.path_mappings)
     media_path = Path(mapped_path)
 
     if not media_path.exists():
-        raise HTTPException(status_code=404, detail=f"File not found after mapping: {mapped_path}")
+        raise HTTPException(
+            status_code=404, detail=f"File not found after mapping: {mapped_path}"
+        )
 
     srt_path = get_srt_path(media_path)
     if srt_path.exists() and not CONFIG.overwrite_existing:
