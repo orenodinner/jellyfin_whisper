@@ -147,17 +147,33 @@ def get_srt_path(media_path: Path) -> Path:
     return media_path.with_name(srt_name)
 
 
+def pick_subtitle_codec(media_path: Path) -> Optional[str]:
+    ext = media_path.suffix.lower()
+    if CONFIG.subtitle_codec_map:
+        return CONFIG.subtitle_codec_map.get(ext)
+    if ext in {".mp4", ".m4v", ".mov"}:
+        return "mov_text"
+    if ext in {".webm"}:
+        return "webvtt"
+    return "srt"
+
+
 def mux_subtitle_track(media_path: Path, srt_path: Path, item_id: str) -> None:
     if not CONFIG.mux_subtitles:
-        return
-    if media_path.suffix.lower() != ".mp4":
-        logger.info("Mux skipped for itemId=%s (not mp4): %s", item_id, media_path)
         return
     if not srt_path.exists():
         logger.warning("Mux skipped for itemId=%s (missing SRT): %s", item_id, srt_path)
         return
 
     temp_path = media_path.with_name(f"{media_path.stem}.muxing{media_path.suffix}")
+    subtitle_codec = pick_subtitle_codec(media_path)
+    if subtitle_codec is None:
+        logger.info(
+            "Mux skipped for itemId=%s (no codec mapping): %s",
+            item_id,
+            media_path,
+        )
+        return
     cmd = [
         CONFIG.ffmpeg_path,
         "-y",
@@ -174,12 +190,17 @@ def mux_subtitle_track(media_path: Path, srt_path: Path, item_id: str) -> None:
         "-c",
         "copy",
         "-c:s",
-        "mov_text",
+        subtitle_codec,
         "-metadata:s:s:0",
         "language=jpn",
         str(temp_path),
     ]
-    logger.info("Muxing subtitles itemId=%s: %s", item_id, media_path)
+    logger.info(
+        "Muxing subtitles itemId=%s codec=%s: %s",
+        item_id,
+        subtitle_codec,
+        media_path,
+    )
     try:
         subprocess.run(cmd, check=True, capture_output=True, text=True)
     except FileNotFoundError:

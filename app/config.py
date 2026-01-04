@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -26,6 +26,14 @@ class AppConfig(BaseModel):
     port: int = 9876
     mux_subtitles: bool = True
     ffmpeg_path: str = "ffmpeg"
+    subtitle_codec_map: Dict[str, str] = Field(
+        default_factory=lambda: {
+            ".mp4": "mov_text",
+            ".m4v": "mov_text",
+            ".mov": "mov_text",
+            ".webm": "webvtt",
+        }
+    )
 
     def normalized(self) -> "AppConfig":
         if self.max_concurrent_jobs < 1:

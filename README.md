@@ -40,6 +40,7 @@ uvicorn app.main:app --host 192.168.0.11 --port 9876
 - `port`: サーバーの待ち受けポート（例: `9876`）。
 - `mux_subtitles`: `true` の場合、SRT を MP4 に字幕トラックとして埋め込み。
 - `ffmpeg_path`: `ffmpeg` 実行ファイルのパス（例: `C:\ffmpeg\bin\ffmpeg.exe`）。
+- `subtitle_codec_map`: 拡張子ごとの字幕コーデック指定（例: `.mp4` → `mov_text`）。未指定の拡張子は mux をスキップ。
 
 設定ファイルの場所は環境変数で上書きできます:
 
