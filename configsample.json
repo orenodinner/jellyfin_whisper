@@ -6,11 +6,15 @@
       "regex": false
     }
   ],
-  "model": "medium",
+  "model": "distil-large-v3",
   "language": "ja",
   "device": "cuda",
   "compute_type": "float16",
   "overwrite_existing": false,
-  "srt_suffix": ".ja.srt",
-  "max_concurrent_jobs": 1
+  "srt_suffix": ".srt",
+  "max_concurrent_jobs": 1,
+  "host": "192.168.0.11",
+  "port": 9876,
+  "mux_subtitles": true,
+  "ffmpeg_path": "ffmpeg"
 }

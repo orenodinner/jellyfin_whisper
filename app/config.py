@@ -24,6 +24,8 @@ class AppConfig(BaseModel):
     max_concurrent_jobs: int = 1
     host: str = "0.0.0.0"
     port: int = 9876
+    mux_subtitles: bool = True
+    ffmpeg_path: str = "ffmpeg"
 
     def normalized(self) -> "AppConfig":
         if self.max_concurrent_jobs < 1:

@@ -34,10 +34,12 @@ uvicorn app.main:app --host 192.168.0.11 --port 9876
 - `device`: `cuda` または `cpu`。
 - `compute_type`: 例: `float16` (GPU) / `int8` (CPU)。
 - `overwrite_existing`: `false` の場合、既存 SRT があればスキップ。
-- `srt_suffix`: ファイル名の末尾（例: `.ja.srt`）。
+- `srt_suffix`: ファイル名の末尾（例: `.srt`）。
 - `max_concurrent_jobs`: 同時実行数の上限。
 - `host`: サーバーの待ち受け IP（例: `192.168.0.11`）。
 - `port`: サーバーの待ち受けポート（例: `9876`）。
+- `mux_subtitles`: `true` の場合、SRT を MP4 に字幕トラックとして埋め込み。
+- `ffmpeg_path`: `ffmpeg` 実行ファイルのパス（例: `C:\ffmpeg\bin\ffmpeg.exe`）。
 
 設定ファイルの場所は環境変数で上書きできます:
 
@@ -54,7 +56,8 @@ set JELLYFINORED_CONFIG=C:\path\to\config.json
   "title": "Example",
   "itemId": "123",
   "downloadUrl": "http://jellyfin/...",
-  "filePath": "/mnt/Priscilla/dnow/vid.mp4"
+  "filePath": "/mnt/Priscilla/dnow/vid.mp4",
+  "overwriteExisting": true
 }
 ```
 
@@ -73,3 +76,7 @@ set JELLYFINORED_CONFIG=C:\path\to\config.json
 ```json
 {"status":"ok"}
 ```
+
+## 依存ツール
+
+MP4 への字幕埋め込みには `ffmpeg` が必要です。`ffmpeg` をインストールし、必要に応じて `ffmpeg_path` を設定してください。
